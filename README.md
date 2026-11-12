@@ -49,3 +49,7 @@ fps에 가장 큰 영향을 주는 것은 쉐이더 설정이 아니라 게임�
 | `tools/ShaderCheck.java` | 실제 그래픽 드라이버에서 모든 쉐이더를 컴파일·링크해 보는 검사 도구 (LWJGL 3 필요) |
 
 설정을 추가하려면 `shaders/lib/settings.glsl`에 정의를 넣고 `tools/gen_config.py`의 표에 이름과 설명을 추가한 뒤 스크립트를 실행합니다. `shaders.properties`, `block.properties`, `lang/*.lang`을 직접 고치면 다음 실행 때 덮어써집니다.
+
+## 라이선스
+
+[MIT 라이선스](LICENSE)로 배포합니다. 저작권 표시와 라이선스 문구를 유지하면 자유롭게 사용, 수정, 재배포할 수 있습니다.
