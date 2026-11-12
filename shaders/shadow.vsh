@@ -20,20 +20,20 @@ in vec4 mc_Entity;
 in vec4 at_midBlock;    // xyz: vertex -> block center in 1/64 blocks, w: light level (0-15)
 writeonly uniform image3D voxelImg;
 
-// Indexed by block id - 10010, see block.properties
+// Indexed by block id - 10010, see block.properties. The colors are options (lib/settings.glsl).
 const vec3 LIGHT_COLORS[8] = vec3[8](
-    vec3(1.00, 0.62, 0.32),     // torches, lanterns, fire
-    vec3(1.00, 0.42, 0.14),     // lava
-    vec3(0.25, 0.75, 1.00),     // soul fire
-    vec3(1.00, 0.18, 0.12),     // redstone
-    vec3(1.00, 0.82, 0.45),     // glowstone
-    vec3(0.72, 0.92, 1.00),     // sea lantern, end rod
-    vec3(0.72, 0.35, 1.00),     // portal, amethyst
-    vec3(0.45, 1.00, 0.45)      // green lights
+    vec3(LIGHT_COLOR_TORCH_R, LIGHT_COLOR_TORCH_G, LIGHT_COLOR_TORCH_B),     // torches, lanterns, fire
+    vec3(LIGHT_COLOR_LAVA_R, LIGHT_COLOR_LAVA_G, LIGHT_COLOR_LAVA_B),     // lava
+    vec3(LIGHT_COLOR_SOUL_R, LIGHT_COLOR_SOUL_G, LIGHT_COLOR_SOUL_B),     // soul fire
+    vec3(LIGHT_COLOR_REDSTONE_R, LIGHT_COLOR_REDSTONE_G, LIGHT_COLOR_REDSTONE_B),     // redstone
+    vec3(LIGHT_COLOR_GLOWSTONE_R, LIGHT_COLOR_GLOWSTONE_G, LIGHT_COLOR_GLOWSTONE_B),     // glowstone
+    vec3(LIGHT_COLOR_SEA_R, LIGHT_COLOR_SEA_G, LIGHT_COLOR_SEA_B),     // sea lantern, end rod
+    vec3(LIGHT_COLOR_PORTAL_R, LIGHT_COLOR_PORTAL_G, LIGHT_COLOR_PORTAL_B),     // portal, amethyst
+    vec3(LIGHT_COLOR_GREEN_R, LIGHT_COLOR_GREEN_G, LIGHT_COLOR_GREEN_B)      // green lights
 );
 
 // Block id 10018: blocks that give no light in the game but glow with this pack
-const vec3 GLOW_COLOR = vec3(0.35, 1.00, 0.70);     // end portal frame
+const vec3 GLOW_COLOR = vec3(LIGHT_COLOR_FRAME_R, LIGHT_COLOR_FRAME_G, LIGHT_COLOR_FRAME_B);     // end portal frame
 
 // Indexed by block id - 10030: stained glass in dye order, then ice, slime, honey.
 // The share of each color that gets through. Kept mild on purpose: light also

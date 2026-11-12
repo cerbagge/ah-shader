@@ -142,6 +142,32 @@ SCREENS = [
  ('COLOR',     '색감',       '최종 화면의 채도와 대비를 설정합니다.', 'Color', 'Saturation and contrast of the final image.'),
 ]
 
+# Screens that exist in shaders.properties but are not linked from the main screen, so the
+# Iris options screen never shows them. The AH Client menu lists every screen.SCREEN_* entry
+# and shows these too; ahclient.screens names them.
+HUB_SCREENS = [
+ ('LIGHT_COLORS', '광원 색', '광원 종류별 조명 색을 빨강·초록·파랑 값으로 정합니다. AH Client 메뉴에서만 표시됩니다.',
+  'Light Colors', 'Red, green and blue of the light from each kind of light source. Shown in the AH Client menu only.'),
+]
+
+# (key, ko name, ko blocks, en name, en blocks)
+LIGHT_GROUPS = [
+ ('TORCH', '횃불류', '횃불, 랜턴, 불, 모닥불, 켜진 화로, 버섯불, 촛불', 'Torches', 'torches, lanterns, fire, campfires, lit furnaces, shroomlights, candles'),
+ ('LAVA', '용암', '용암, 마그마 블록, 용암 가마솥', 'Lava', 'lava, magma blocks, lava cauldrons'),
+ ('SOUL', '영혼 불', '영혼 횃불, 영혼 랜턴, 영혼 불, 영혼 모닥불', 'Soul Fire', 'soul torches, soul lanterns, soul fire, soul campfires'),
+ ('REDSTONE', '레드스톤', '레드스톤 횃불, 켜진 레드스톤 광석', 'Redstone', 'redstone torches, lit redstone ore'),
+ ('GLOWSTONE', '발광석', '발광석, 켜진 레드스톤 조명, 황토색 개구리불', 'Glowstone', 'glowstone, lit redstone lamps, ochre froglights'),
+ ('SEA', '바다 랜턴', '바다 랜턴, 엔드 막대, 신호기, 전달체', 'Sea Lantern', 'sea lanterns, end rods, beacons, conduits'),
+ ('PORTAL', '차원문·자수정', '네더 차원문, 우는 흑요석, 자수정, 진주빛 개구리불, 충전된 리스폰 정박기', 'Portal and Amethyst', 'nether portals, crying obsidian, amethyst, pearlescent froglights, charged respawn anchors'),
+ ('GREEN', '초록 광원', '초록 개구리불, 불우렁쉥이, 발광 이끼', 'Green Lights', 'verdant froglights, sea pickles, glow lichen'),
+ ('FRAME', '엔드 차원문 틀', '엔드 차원문 틀 (이 쉐이더에서만 빛을 냅니다)', 'End Portal Frame', 'end portal frames (they only glow with this pack)'),
+]
+for key, ko, ko_blocks, en, en_blocks in LIGHT_GROUPS:
+    for ch, ko_ch, en_ch in (('R', '빨강', 'Red'), ('G', '초록', 'Green'), ('B', '파랑', 'Blue')):
+        OPTIONS.append(('LIGHT_COLORS', 'LIGHT_COLOR_%s_%s' % (key, ch), 'raw',
+                        '%s: %s' % (ko, ko_ch), '%s의 조명 색에서 %s 성분입니다. 대상: %s.' % (ko, ko_ch, ko_blocks),
+                        '%s: %s' % (en, en_ch), '%s part of the light color of %s.' % (en_ch, en_blocks)))
+
 # ---------------------------------------------------------------- option values from settings.glsl
 settings = io.open('lib/settings.glsl', encoding='utf-8').read()
 def values_of(opt):
@@ -160,7 +186,7 @@ def label(kind, v, lang):
 
 for lang, fname in (('ko', 'lang/ko_kr.lang'), ('en', 'lang/en_us.lang')):
     out = []
-    for key, ko, koc, en, enc in SCREENS:
+    for key, ko, koc, en, enc in SCREENS + HUB_SCREENS:
         out.append('screen.SCREEN_%s=%s' % (key, ko if lang == 'ko' else en))
         out.append('screen.SCREEN_%s.comment=%s' % (key, koc if lang == 'ko' else enc))
     out.append('')
@@ -226,9 +252,15 @@ screen=%s
 screen.columns=2
 %s
 sliders=%s
+
+# Screens for the AH Client menu only. Nothing links to them, so Iris never shows them.
+ahclient.screens=%s
+%s
 ''' % (' '.join('[SCREEN_%s]' % s[0] for s in SCREENS),
        '\n'.join('screen.SCREEN_%s=%s' % (s[0], ' '.join(by_screen[s[0]])) for s in SCREENS),
-       ' '.join(sliders))
+       ' '.join(sliders),
+       ' '.join('SCREEN_%s' % s[0] for s in HUB_SCREENS),
+       '\n'.join('screen.SCREEN_%s=%s' % (s[0], ' '.join(by_screen[s[0]])) for s in HUB_SCREENS))
 write('shaders.properties', props)
 
 # ---------------------------------------------------------------- block.properties
