@@ -20,21 +20,6 @@ in vec4 mc_Entity;
 in vec4 at_midBlock;    // xyz: vertex -> block center in 1/64 blocks, w: light level (0-15)
 writeonly uniform image3D voxelImg;
 
-// Indexed by block id - 10010, see block.properties. The colors are options (lib/settings.glsl).
-const vec3 LIGHT_COLORS[8] = vec3[8](
-    vec3(LIGHT_COLOR_TORCH_R, LIGHT_COLOR_TORCH_G, LIGHT_COLOR_TORCH_B),     // torches, lanterns, fire
-    vec3(LIGHT_COLOR_LAVA_R, LIGHT_COLOR_LAVA_G, LIGHT_COLOR_LAVA_B),     // lava
-    vec3(LIGHT_COLOR_SOUL_R, LIGHT_COLOR_SOUL_G, LIGHT_COLOR_SOUL_B),     // soul fire
-    vec3(LIGHT_COLOR_REDSTONE_R, LIGHT_COLOR_REDSTONE_G, LIGHT_COLOR_REDSTONE_B),     // redstone
-    vec3(LIGHT_COLOR_GLOWSTONE_R, LIGHT_COLOR_GLOWSTONE_G, LIGHT_COLOR_GLOWSTONE_B),     // glowstone
-    vec3(LIGHT_COLOR_SEA_R, LIGHT_COLOR_SEA_G, LIGHT_COLOR_SEA_B),     // sea lantern, end rod
-    vec3(LIGHT_COLOR_PORTAL_R, LIGHT_COLOR_PORTAL_G, LIGHT_COLOR_PORTAL_B),     // portal, amethyst
-    vec3(LIGHT_COLOR_GREEN_R, LIGHT_COLOR_GREEN_G, LIGHT_COLOR_GREEN_B)      // green lights
-);
-
-// Block id 10018: blocks that give no light in the game but glow with this pack
-const vec3 GLOW_COLOR = vec3(LIGHT_COLOR_FRAME_R, LIGHT_COLOR_FRAME_G, LIGHT_COLOR_FRAME_B);     // end portal frame
-
 // Indexed by block id - 10030: stained glass in dye order, then ice, slime, honey.
 // The share of each color that gets through. Kept mild on purpose: light also
 // finds its way around the glass, and a strong tint would lose out to that.
@@ -59,11 +44,12 @@ void main() {
 #ifdef USE_COLORED_LIGHTS
     int id = int(mc_Entity.x + 0.5);
     vec4 cell = vec4(0.0);
-    if (id >= 10010 && id <= 10017) {
+    if (id >= 10010 && id <= 10018) {
+        // Light sources: which group (its color, brightness and range are looked up in
+        // shadowcomp.csh) and the light level the block gives off. 10018 is the end
+        // portal frame, which only glows with this pack.
         float level = at_midBlock.w >= 1.0 && at_midBlock.w <= 15.0 ? at_midBlock.w / 15.0 : 1.0;
-        cell = vec4(LIGHT_COLORS[id - 10010] * level, VOXEL_LIGHT);
-    } else if (id == 10018) {
-        cell = vec4(GLOW_COLOR, VOXEL_GLOW);
+        cell = vec4((float(id - 10010) + 0.5) / 16.0, level, 0.0, VOXEL_LIGHT);
     } else if (id >= 10030 && id <= 10048) {
         cell = vec4(TINT_COLORS[id - 10030], VOXEL_TINT);
     } else if (gl_VertexID % 4 == 0 && id < 10000 && all(greaterThan(abs(at_midBlock.xyz), vec3(31.5)))) {

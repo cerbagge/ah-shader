@@ -167,6 +167,14 @@ for key, ko, ko_blocks, en, en_blocks in LIGHT_GROUPS:
         OPTIONS.append(('LIGHT_COLORS', 'LIGHT_COLOR_%s_%s' % (key, ch), 'raw',
                         '%s: %s' % (ko, ko_ch), '%s의 조명 색에서 %s 성분입니다. 대상: %s.' % (ko, ko_ch, ko_blocks),
                         '%s: %s' % (en, en_ch), '%s part of the light color of %s.' % (en_ch, en_blocks)))
+    # Right after the color, so the AH Client menu draws them under its color swatch
+    OPTIONS.append(('LIGHT_COLORS', 'LIGHT_BRIGHTNESS_%s' % key, 'pct',
+                    '%s: 밝기' % ko, '%s의 빛이 주변을 밝히는 세기입니다. 100%%가 원래 밝기입니다. 대상: %s.' % (ko, ko_blocks),
+                    '%s: Brightness' % en, 'How strongly %s light their surroundings. 100%% is the normal brightness.' % en_blocks))
+    if key != 'FRAME':
+        OPTIONS.append(('LIGHT_COLORS', 'LIGHT_RANGE_%s' % key, 'range',
+                        '%s: 범위' % ko, '%s의 빛이 닿는 거리를 블록 단위로 늘리거나 줄입니다. 늘리면 가까운 곳도 조금 더 밝아집니다. 대상: %s.' % (ko, ko_blocks),
+                        '%s: Range' % en, 'Blocks added to or taken off the distance the light of %s reaches.' % en_blocks))
 
 # ---------------------------------------------------------------- option values from settings.glsl
 settings = io.open('lib/settings.glsl', encoding='utf-8').read()
@@ -178,6 +186,11 @@ def label(kind, v, lang):
     f = float(v)
     if kind == 'pct':
         return '%d%%' % round(f * 100)
+    if kind == 'range':
+        # blocks added to or taken off the range of a light
+        if f == 0:
+            return '게임 그대로' if lang == 'ko' else 'as in game'
+        return ('%+g블록' if lang == 'ko' else '%+g blocks') % f
     if kind.startswith('fmt:'):
         ko, en = kind[4:].split('|')
         num = ('%g' % f)
@@ -240,6 +253,8 @@ shadow.culling=reversed
 image.voxelImg=voxelSampler rgba rgba8 unsigned_byte true false 64 32 64
 image.lightImgA=lightSamplerA rgba rgba16f half_float false false 64 32 64
 image.lightImgB=lightSamplerB rgba rgba16f half_float false false 64 32 64
+image.extraImgA=extraSamplerA rg rg16f half_float false false 64 32 64
+image.extraImgB=extraSamplerB rg rg16f half_float false false 64 32 64
 program.shadow.enabled=true
 program.shadowcomp.enabled=true
 #else
@@ -278,7 +293,7 @@ block.10002=minecraft:grass minecraft:short_grass minecraft:fern minecraft:tall_
  minecraft:brown_mushroom minecraft:red_mushroom minecraft:cobweb minecraft:seagrass minecraft:tall_seagrass minecraft:kelp minecraft:kelp_plant \\
  minecraft:nether_sprouts minecraft:crimson_roots minecraft:warped_roots minecraft:crimson_fungus minecraft:warped_fungus
 
-# Light sources by color, ids 10010-10017. Colors: LIGHT_COLORS in shadow.vsh.
+# Light sources by group, ids 10010-10018. Color, brightness and range of each group are options (lib/settings.glsl).
 # Light sources not listed here keep the default warm color.
 
 # Torches, lanterns, fire
@@ -308,7 +323,7 @@ block.10016=minecraft:nether_portal minecraft:crying_obsidian minecraft:amethyst
 # Green lights
 block.10017=minecraft:verdant_froglight minecraft:sea_pickle minecraft:glow_lichen
 
-# Gives no light in the game, glows with this pack (GLOW_COLOR in shadow.vsh)
+# Gives no light in the game, glows with this pack
 block.10018=minecraft:end_portal_frame
 
 # Colored light stops at full blocks, found by their shape (see shadow.vsh).

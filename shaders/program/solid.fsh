@@ -15,6 +15,8 @@ uniform sampler2D shadowcolor0;
 #ifdef USE_COLORED_LIGHTS
 uniform sampler3D lightSamplerA;
 uniform sampler3D lightSamplerB;
+uniform sampler3D extraSamplerA;
+uniform sampler3D extraSamplerB;
 #endif
 
 in vec2 texcoord;
@@ -83,27 +85,36 @@ vec3 getShadow(float fallback) {
 }
 
 #ifdef USE_COLORED_LIGHTS
-// Block light around this fragment, from the light grid.
-// rgb: its color. Falls back to the default warm color where the grid has nothing.
-// a:   light level (0-1) from glowing blocks the vanilla light map does not include.
-vec4 getGridLight() {
+// Block light around this fragment, from the light grid (layout: shadowcomp.csh).
+// color:      its color. The default warm color where the grid has nothing.
+// brightness: brightness setting of the light sources that reach this place
+// cut:        light levels to take off the game's block light (shorter range)
+// added:      light level (0-1) the pack adds on its own: longer range, glowing blocks
+void getGridLight(out vec3 color, out float brightness, out float cut, out float added) {
+    color = BLOCKLIGHT_COLOR;
+    brightness = 1.0;
+    cut = 0.0;
+    added = 0.0;
+
     vec3 border = min(lightCoord, 1.0 - lightCoord);
     float inside = min(border.x, min(border.y, border.z));
-    if (inside <= 0.0) return vec4(BLOCKLIGHT_COLOR, 0.0);
+    if (inside <= 0.0) return;
 
-    vec4 light = frameCounter % 2 == 0 ? texture(lightSamplerA, lightCoord) : texture(lightSamplerB, lightCoord);
+    bool even = frameCounter % 2 == 0;
+    vec4 light = even ? texture(lightSamplerA, lightCoord) : texture(lightSamplerB, lightCoord);
+    vec2 extra = even ? texture(extraSamplerA, lightCoord).rg : texture(extraSamplerB, lightCoord).rg;
+
     float fade = smoothstep(0.0, 0.08, inside);
     float peak = max(light.r, max(light.g, light.b));
     // Fades out where the light has travelled about as far as block light reaches
     float reach = pow(LPV_FALLOFF, 14.0);
-    float weight = smoothstep(0.1 * reach, reach, peak) * fade * COLORED_LIGHT_STRENGTH;
+    float known = smoothstep(0.1 * reach, reach, peak) * fade;
+    float invPeak = 1.0 / max(peak, 0.000001);
 
-    // The grid loses a fixed share per block: turn that back into a distance in
-    // blocks, then into a light level that drops by one per block like the game's.
-    float dist = log(max(light.a, 0.0000001)) / log(LPV_FALLOFF);
-    float level = clamp((GLOW_LIGHT_LEVEL - dist) / 15.0, 0.0, 1.0) * fade;
-
-    return vec4(mix(BLOCKLIGHT_COLOR, light.rgb / max(peak, 0.000001), weight), level);
+    color = mix(BLOCKLIGHT_COLOR, light.rgb * invPeak, known * COLORED_LIGHT_STRENGTH);
+    brightness = mix(1.0, min(light.a * invPeak, 4.0), known);
+    cut = min(extra.g * invPeak, 1.0) * RANGE_CUT_SCALE * known;
+    added = clamp(extra.r * (LEVEL_SCALE / 15.0), 0.0, 1.0) * fade;
 }
 #endif
 
@@ -163,13 +174,17 @@ void main() {
 
     vec3 blockColor = BLOCKLIGHT_COLOR;
     float blockLevel = lm.x;
+    float blockBrightness = BLOCKLIGHT_BRIGHTNESS;
 #ifdef USE_COLORED_LIGHTS
-    vec4 gridLight = getGridLight();
-    blockColor = gridLight.rgb;
-    blockLevel = max(blockLevel, gridLight.a);
+    float sourceBrightness, rangeCut, addedLevel;
+    getGridLight(blockColor, sourceBrightness, rangeCut, addedLevel);
+    // A shorter range: the game's light ends that many blocks earlier but stays as bright at the source
+    blockLevel = max(blockLevel * 15.0 - rangeCut, 0.0) / (15.0 - rangeCut);
+    blockLevel = max(blockLevel, addedLevel);
+    blockBrightness *= sourceBrightness;
 #endif
 
-    vec3 blockLight = blockColor * ((blockLevel * blockLevel * blockLevel * 2.4 + blockLevel * 0.18) * BLOCKLIGHT_BRIGHTNESS);
+    vec3 blockLight = blockColor * ((blockLevel * blockLevel * blockLevel * 2.4 + blockLevel * 0.18) * blockBrightness);
     vec3 light = ambientColor * (lm.y * lm.y * lightVar.w)
                + directColor * (max(NdotL, 0.0) * shadow)
                + vec3(0.018 * MIN_BRIGHTNESS);

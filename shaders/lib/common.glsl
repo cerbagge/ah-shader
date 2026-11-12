@@ -42,8 +42,11 @@ const float LPV_FALLOFF = COLORED_LIGHT_FALLOFF;
 // Written by shadow.vsh, read by shadowcomp.csh as int(alpha * 4 + 0.5).
 const float VOXEL_WALL  = 0.25;     // stops light
 const float VOXEL_TINT  = 0.5;      // rgb: share of each color that gets through
-const float VOXEL_GLOW  = 0.75;     // rgb: color of a light the game itself does not have
-const float VOXEL_LIGHT = 1.0;      // rgb: color of a regular light source, scaled by its light level
+const float VOXEL_LIGHT = 1.0;      // r: light group (index + 0.5) / 16, g: its light level / 15
+
+// Scales of the two values in extraImg (see shadowcomp.csh)
+const float LEVEL_SCALE = 32.0;     // light levels per 1.0 of the added light level
+const float RANGE_CUT_SCALE = 8.0;  // levels per 1.0 of the range cut
 
 // Halton(2,3) sequence, centered on 0. Sub-pixel camera jitter in render pixels.
 const vec2 TAA_OFFSETS[16] = vec2[16](
