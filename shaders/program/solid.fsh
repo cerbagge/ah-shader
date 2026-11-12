@@ -107,6 +107,25 @@ vec4 getGridLight() {
 }
 #endif
 
+#ifndef TERRAIN
+// Entities, signs and floating text use textures without mipmaps. At a reduced
+// render scale one pixel covers several texels of small text, and a single
+// sample keeps or drops whole strokes at random. Four samples spread over the
+// pixel give each stroke its share, weighted by alpha so that transparent
+// texels do not bleed their color in.
+vec4 sampleCoverage(vec2 uv) {
+    vec2 dx = dFdx(uv);
+    vec2 dy = dFdy(uv);
+    vec4 a = texture(gtexture, uv + dx * 0.125 + dy * 0.375);
+    vec4 b = texture(gtexture, uv - dx * 0.125 - dy * 0.375);
+    vec4 c = texture(gtexture, uv + dx * 0.375 - dy * 0.125);
+    vec4 d = texture(gtexture, uv - dx * 0.375 + dy * 0.125);
+    float alpha = a.a + b.a + c.a + d.a;
+    vec3 rgb = (a.rgb * a.a + b.rgb * b.a + c.rgb * c.a + d.rgb * d.a) / max(alpha, 0.0001);
+    return vec4(rgb, alpha * 0.25);
+}
+#endif
+
 vec3 applyFog(vec3 color) {
     float dist = length(viewPos);
     vec3 dir = viewPos / dist;
@@ -127,7 +146,11 @@ vec3 applyFog(vec3 color) {
 void main() {
     discardOutsideRenderArea();
 
+#ifdef TERRAIN
     vec4 color = texture(gtexture, texcoord) * glcolor;
+#else
+    vec4 color = sampleCoverage(texcoord) * glcolor;
+#endif
     if (color.a < alphaTestRef) discard;
 #ifdef ENTITY
     color.rgb = mix(color.rgb, entityColor.rgb, entityColor.a);

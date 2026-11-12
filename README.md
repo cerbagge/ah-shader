@@ -3,7 +3,7 @@
 Minecraft Java Edition용 가벼운 쉐이더팩입니다. 내장 그래픽 노트북에서도 높은 fps가 나오는 것을 목표로 만들었습니다.
 
 - 대상: Minecraft 1.20.1, Fabric, Iris 1.7.6, Sodium 0.5.13
-- 버전: 2.2.0
+- 버전: 2.2.1
 
 ## 내려받기
 
