@@ -1,0 +1,4 @@
+# Helper scripts tied to one PC's game window (screenshots, key input)
+tools/*.ps1
+tools/*.jpg
+.claude/
