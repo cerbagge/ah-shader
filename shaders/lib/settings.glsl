@@ -88,6 +88,9 @@ const float sunPathRotation = -25.0; // [-45.0 -35.0 -25.0 -15.0 0.0 15.0 25.0 3
 #define FOG_DENSITY 1.0 // [0.0 0.5 1.0 1.5 2.0 3.0]
 #define BORDER_FOG_START 0.75 // [0.5 0.6 0.7 0.75 0.8 0.9]
 #define UNDERWATER_FOG 1.0 // [0.5 0.75 1.0 1.5 2.0]
+#define CLOUD_MODE 0 // [0 1 2 3]
+#define CLOUD_BRIGHTNESS 1.0 // [0.5 0.6 0.7 0.8 0.9 1.0 1.1 1.2 1.35 1.5 2.0]
+#define CLOUD_OPACITY 1.0 // [0.25 0.5 0.75 1.0]
 
 // --- Water ---
 #define WATER_WAVES
@@ -103,6 +106,9 @@ const float sunPathRotation = -25.0; // [-45.0 -35.0 -25.0 -15.0 0.0 15.0 25.0 3
 
 // ENTITY_SHADOWS is only read by shaders.properties; referenced here so it is listed as an option
 #ifdef ENTITY_SHADOWS
+#endif
+// CLOUD_MODE is only read by shaders.properties too (0: game setting, 1: off, 2: fast, 3: fancy)
+#if CLOUD_MODE == 0
 #endif
 
 // Colored block light writes images from the shadow pass and runs a compute

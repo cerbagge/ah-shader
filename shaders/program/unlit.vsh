@@ -7,6 +7,9 @@
 out vec2 texcoord;
 #endif
 out vec4 glcolor;
+#ifdef CLOUDS
+out vec3 viewPos;
+#endif
 
 void main() {
 #ifndef BASIC
@@ -14,5 +17,8 @@ void main() {
 #endif
     glcolor = gl_Color;
     gl_Position = ftransform();
+#ifdef CLOUDS
+    viewPos = (gl_ModelViewMatrix * gl_Vertex).xyz;
+#endif
     applyRenderScale(gl_Position);
 }

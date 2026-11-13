@@ -106,6 +106,16 @@ OPTIONS = [
   '물속에서 시야가 흐려지는 정도입니다.',
   'Underwater Fog', 'How quickly visibility drops under water.'),
 
+ ('SKY', 'CLOUD_MODE', 'enum:게임 설정 따름,끔,빠르게,화려하게|Game setting,Off,Fast,Fancy', '구름',
+  '구름을 표시하는 방식입니다. 게임 설정 따름은 비디오 설정의 구름 옵션을 그대로 씁니다. 빠르게는 납작한 구름, 화려하게는 입체 구름입니다. 구름을 켜면 fps가 조금 낮아질 수 있습니다.',
+  'Clouds', 'How clouds are drawn. Game setting uses the clouds option of the video settings. Fast draws flat clouds, Fancy draws them with depth.'),
+ ('SKY', 'CLOUD_BRIGHTNESS', 'pct', '구름 밝기',
+  '구름의 밝기입니다.',
+  'Cloud Brightness', 'Brightness of the clouds.'),
+ ('SKY', 'CLOUD_OPACITY', 'pct', '구름 불투명도',
+  '구름이 얼마나 불투명한지 정합니다. 낮추면 구름 뒤의 하늘이 비쳐 보입니다.',
+  'Cloud Opacity', 'Lower values let the sky show through the clouds.'),
+
  ('WATER', 'WATER_WAVES', 'bool', '물결',
   '수면에 물결 모양의 반사를 적용합니다.',
   'Water Waves', 'Wavy reflections on water surfaces.'),
@@ -186,6 +196,10 @@ def label(kind, v, lang):
     f = float(v)
     if kind == 'pct':
         return '%d%%' % round(f * 100)
+    if kind.startswith('enum:'):
+        # a name per value, in order: "ko1,ko2|en1,en2"
+        ko, en = kind[5:].split('|')
+        return (ko if lang == 'ko' else en).split(',')[int(f)]
     if kind == 'range':
         # blocks added to or taken off the range of a light
         if f == 0:
@@ -221,7 +235,7 @@ for lang, fname in (('ko', 'lang/ko_kr.lang'), ('en', 'lang/en_us.lang')):
 by_screen = {}
 for screen, opt, kind, *_ in OPTIONS:
     by_screen.setdefault(screen, []).append(opt)
-sliders = [opt for screen, opt, kind, *_ in OPTIONS if kind != 'bool']
+sliders = [opt for screen, opt, kind, *_ in OPTIONS if kind != 'bool' and not kind.startswith('enum:')]
 
 props = '''# Vanilla effects the pack replaces or does not need
 oldLighting=false
@@ -242,6 +256,15 @@ shadowEntities=false
 shadowTranslucent=true
 #else
 shadowTranslucent=false
+#endif
+
+# Clouds: the pack can override the clouds option of the video settings
+#if CLOUD_MODE == 1
+clouds=off
+#elif CLOUD_MODE == 2
+clouds=fast
+#elif CLOUD_MODE == 3
+clouds=fancy
 #endif
 
 # Colored block light: a voxel grid around the camera (size = LPV_SIZE in lib/common.glsl).

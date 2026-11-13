@@ -1,6 +1,6 @@
 // Unlit geometry. Also used by the core-profile line program, so no
 // compatibility built-ins here.
-// Defines: BASIC (no texture), SKYBASIC, SKYTEXTURED, RAW (keep vanilla colors)
+// Defines: BASIC (no texture), SKYBASIC, SKYTEXTURED, CLOUDS, RAW (keep vanilla colors)
 
 #include "/lib/settings.glsl"
 #include "/lib/common.glsl"
@@ -10,6 +10,12 @@ uniform sampler2D gtexture;
 in vec2 texcoord;
 #endif
 in vec4 glcolor;
+#ifdef CLOUDS
+in vec3 viewPos;
+// The fog range the game sets while it draws the clouds
+uniform float fogStart;
+uniform float fogEnd;
+#endif
 
 /* RENDERTARGETS: 0 */
 layout(location = 0) out vec4 fragColor;
@@ -39,6 +45,13 @@ void main() {
 #endif
 #ifdef SKYTEXTURED
     color.rgb *= CELESTIAL_BRIGHTNESS;
+#endif
+#ifdef CLOUDS
+    // The vertex color already follows the time of day and the weather
+    color.rgb *= CLOUD_BRIGHTNESS;
+    color.a *= CLOUD_OPACITY;
+    // Far clouds fade out instead of ending in a hard edge
+    if (fogEnd > fogStart) color.a *= 1.0 - smoothstep(fogStart, fogEnd, length(viewPos));
 #endif
 
     fragColor = color;
